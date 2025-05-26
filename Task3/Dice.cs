@@ -2,23 +2,50 @@
 {
     public class Dice
     {
-        public int[] Faces { get; }
+        private int[] faces;
 
         public Dice(string fascesWithSeparator)
         {
-            var parts = fascesWithSeparator.Split(',');
-            if (parts.Length != 6)
-            {
-                throw new ArgumentException("Each die must have exactly 6 faces.");
-            }
-            Faces = new int[parts.Length];
+            var parts = ParseToIntArray(fascesWithSeparator);
+            faces = new int[parts.Length];
             for (int i = 0; i < parts.Length; i++)
             {
-                if (!int.TryParse(parts[i], out Faces[i]))
-                {
-                    throw new ArgumentException("All die faces must be integers.");
-                }
+                faces[i] = parts[i];
             }
+        }
+
+        public int[] GetFaces() => faces;
+
+        public override string ToString() => $"[{string.Join(",", faces)}]";
+
+        private int[] ParseToIntArray(string fascesWithSeparator)
+        {
+            var parts = fascesWithSeparator.Split(',')
+                                           .Select(ParseIntOrThrow)
+                                           .ToArray();
+            if (IsValidParts(parts))
+            {
+                return parts;
+            }
+            throw new ArgumentException("Each die must have exactly 6 faces.");
+        }
+
+        private int ParseIntOrThrow(string s)
+        {
+            if (int.TryParse(s, out int num))
+            {
+                return num;
+            }
+            throw new ArgumentException($"Invalid value '{s}'. Only integers are allowed.");
+        }
+
+        private bool IsValidParts(int[] parts)
+        {
+            if (parts.Length != 6)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
