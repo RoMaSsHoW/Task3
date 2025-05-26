@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace Task3
 {
-    public class FairRandomGenerator
+    public static class FairRandomGenerator
     {
         private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
 
