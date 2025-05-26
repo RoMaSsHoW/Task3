@@ -14,7 +14,7 @@
             }
         }
 
-        public int[] GetFaces() => faces;
+        public int GetFace(int index) => faces[index];
 
         public override string ToString() => $"[{string.Join(",", faces)}]";
 
