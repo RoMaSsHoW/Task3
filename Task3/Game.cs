@@ -27,14 +27,12 @@ namespace Task3
                 computerDice = SelectComputerDice(null);
             }
 
-            // Броски кубиков
             int computerRollIndex = PerformFairSelection(6, "my roll");
             int computerRoll = playerDice.GetFace(computerRollIndex);
 
             int playerRollIndex = PerformFairSelection(6, "your roll");
             int playerRoll = computerDice.GetFace(playerRollIndex);
 
-            // Определение победителя
             Console.WriteLine($"My roll result is {computerRoll}.");
             Console.WriteLine($"Your roll result is {playerRoll}.");
             if (playerRoll > computerRoll)
