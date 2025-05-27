@@ -6,7 +6,7 @@
         {
             var diceList = DiceParser.Parse(args);
             var game = new Game(diceList);
-            game.Run();
+            game.Start();
         }
     }
 }

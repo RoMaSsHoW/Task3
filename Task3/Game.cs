@@ -1,4 +1,6 @@
-﻿namespace Task3
+﻿using System.Security.Cryptography;
+
+namespace Task3
 {
     public class Game
     {
@@ -9,89 +11,28 @@
             this.diceList = diceList;
         }
 
-        public void Run()
-        {
-            //ProbabilityTable.DisplayProbabilityTable(diceList);
-            bool isPlayerFirst = DetermineFirstMove();
-            PlayGame(isPlayerFirst);
-        }
-
-        private int GetUserInput(string messageForUser, int maxValue, IEnumerable<string> options)
-        {
-            Console.WriteLine(messageForUser);
-            foreach (var option in options)
-                Console.WriteLine(option);
-            Console.WriteLine("X - exit");
-            Console.WriteLine("? - help");
-
-            while (true)
-            {
-                Console.Write("Your selection: ");
-                string input = Console.ReadLine()?.ToUpper();
-                if (input == "X") Environment.Exit(0);
-                if (input == "?")
-                {
-                    Console.WriteLine($"Enter a number from 0 to {maxValue - 1}, X to exit, or ? for help.");
-                    continue;
-                }
-                if (int.TryParse(input, out int choice) && choice >= 0 && choice < maxValue)
-                    return choice;
-                Console.WriteLine($"Invalid input. Enter a number from 0 to {maxValue - 1}, X, or ?.");
-            }
-        }
-
-        // Выполнение честного выбора числа
-        // range: диапазон чисел (2 для 0..1, 6 для 0..5)
-        // description: описание действия (например, "determine who makes the first move")
-        // resultHandler: делегат для обработки результата (суммы чисел по модулю)
-        // Возвращает результат, обработанный делегатом
-        private T PerformFairSelection<T>(int range, string description, Func<int, int, T> resultHandler)
-        {
-            Console.WriteLine($"\nLet's {description}.");
-            var (computerChoice, hmac, key) = FairRandomGenerator.GenerateFairNumber(range);
-            Console.WriteLine($"I selected a random value in the range 0..{range - 1} (HMAC={hmac}).");
-            var options = Enumerable.Range(0, range).Select(i => $"{i} - {i}");
-            int playerChoice = GetUserInput("Try to guess my selection.", range, options);
-            Console.WriteLine($"My selection: {computerChoice} (KEY={BitConverter.ToString(key).Replace("-", "")}).");
-            int result = (computerChoice + playerChoice) % range;
-            Console.WriteLine($"The fair number generation result is {computerChoice} + {playerChoice} = {result} (mod {range}).");
-            return resultHandler(computerChoice, result);
-        }
-
-        private bool DetermineFirstMove()
-        {
-            return PerformFairSelection(2, "determine who makes the first move",
-                (computerChoice, result) =>
-                {
-                    bool isPlayerFirst = result == 0;
-                    Console.WriteLine(isPlayerFirst ? "You make the first move!" : "I make the first move!");
-                    return isPlayerFirst;
-                });
-        }
-
-        // Основной игровой процесс
-        private void PlayGame(bool isPlayerFirst)
+        public void Start()
         {
             Dice computerDice = null;
             Dice playerDice = null;
 
-            // Выбор кубиков
-            if (isPlayerFirst)
+            if (IsPlayerFirst())
             {
                 playerDice = SelectPlayerDice(null);
                 computerDice = SelectComputerDice(playerDice);
             }
             else
             {
-                computerDice = SelectComputerDice(null);
                 playerDice = SelectPlayerDice(computerDice);
+                computerDice = SelectComputerDice(null);
             }
 
             // Броски кубиков
-            int computerRoll = PerformFairSelection(6, "my roll",
-                (computerChoice, result) => playerDice.GetFace(result));
-            int playerRoll = PerformFairSelection(6, "your roll",
-                (computerChoice, result) => computerDice.GetFace(result));
+            int computerRollIndex = PerformFairSelection(6, "my roll");
+            int computerRoll = playerDice.GetFace(computerRollIndex);
+
+            int playerRollIndex = PerformFairSelection(6, "your roll");
+            int playerRoll = computerDice.GetFace(playerRollIndex);
 
             // Определение победителя
             Console.WriteLine($"My roll result is {computerRoll}.");
@@ -104,6 +45,55 @@
                 Console.WriteLine($"It's a tie ({playerRoll} = {computerRoll})!");
         }
 
+        private int GetUserInput(string message, int maxValue, IEnumerable<string> options)
+        {
+            Console.WriteLine(message);
+            foreach (var option in options)
+            {
+                Console.WriteLine(option);
+            }
+            Console.WriteLine("X - exit");
+            Console.WriteLine("? - help");
+            string errorMessage = $"Enter a number from 0 to {maxValue - 1}, X to exit, or ? for help.";
+            while (true)
+            {
+                Console.Write("Your selection: ");
+                string input = Console.ReadLine().ToUpper();
+                if (input == "X") Environment.Exit(0);
+                if (input == "?")
+                {
+                    Console.WriteLine(errorMessage);
+                    continue;
+                }
+                if (int.TryParse(input, out int choice) && choice >= 0 && choice < maxValue)
+                {
+                    return choice;
+                }
+                Console.WriteLine($"Invalid input. {errorMessage}");
+            }
+        }
+
+        private int PerformFairSelection(int range, string description)
+        {
+            Console.WriteLine($"\nLet's {description}.");
+            var (computerChoice, hmac, key) = FairRandomGenerator.GenerateFairNumber(range);
+            Console.WriteLine($"I selected a random value in the range 0..{range - 1} (HMAC={hmac}).");
+            var options = Enumerable.Range(0, range).Select(i => $"{i} - {i}");
+            int playerChoice = GetUserInput("Try to guess my selection.", range, options);
+            Console.WriteLine($"My selection: {computerChoice} (KEY={BitConverter.ToString(key).Replace("-", "")}).");
+            int result = (computerChoice + playerChoice) % range;
+            Console.WriteLine($"The fair number generation result is {computerChoice} + {playerChoice} = {result} (mod {range}).");
+            return result;
+        }
+
+        private bool IsPlayerFirst()
+        {
+            int result = PerformFairSelection(2, "determine who makes the first move");
+            bool isPlayerFirst = result == 0;
+            Console.WriteLine(isPlayerFirst ? "You make the first move!" : "I make the first move!");
+            return isPlayerFirst;
+        }
+
         private Dice SelectPlayerDice(Dice excludedDice)
         {
             var options = diceList
@@ -113,11 +103,11 @@
             int choice = GetUserInput("\nChoose your dice:", diceList.Count, options);
             return diceList[choice];
         }
-         
+
         private Dice SelectComputerDice(Dice excludedDice)
         {
             var availableDice = diceList.Where(d => d != excludedDice).ToList();
-            var selectedDice = availableDice[Random.Shared.Next(availableDice.Count)];
+            var selectedDice = availableDice[RandomNumberGenerator.GetInt32(availableDice.Count)];
             Console.WriteLine($"\nI choose the {selectedDice} dice.");
             return selectedDice;
         }
