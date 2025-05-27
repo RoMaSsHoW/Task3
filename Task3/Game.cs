@@ -123,12 +123,12 @@ namespace Task3
 
         private Dice SelectPlayerDice(Dice excludedDice)
         {
-            var options = diceList
+            var availableDice = diceList.Where(d => d != excludedDice).ToList();
+            var options = availableDice
                 .Select((dice, index) => (dice, index))
-                .Where(x => x.dice != excludedDice)
                 .Select(x => $"{x.index} - {x.dice}");
-            int choice = GetUserInput("\nChoose your dice:", diceList.Count, options);
-            return diceList[choice];
+            int choice = GetUserInput("\nChoose your dice:", availableDice.Count, options);
+            return availableDice[choice];
         }
 
         private Dice SelectComputerDice(Dice excludedDice)
