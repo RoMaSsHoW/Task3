@@ -45,30 +45,39 @@ namespace Task3
 
         private int GetUserInput(string message, int maxValue, IEnumerable<string> options)
         {
-            Console.WriteLine(message);
-            foreach (var option in options)
-            {
-                Console.WriteLine(option);
-            }
-            Console.WriteLine("X - exit");
-            Console.WriteLine("? - help");
-            string errorMessage = $"Enter a number from 0 to {maxValue - 1}, X to exit, or ? for help.";
             while (true)
             {
-                Console.Write("Your selection: ");
-                string input = Console.ReadLine().ToUpper();
+                DisplayMenu(message, options);
+                string input = GetUserSelection();
                 if (input == "X") Environment.Exit(0);
                 if (input == "?")
                 {
-                    Console.WriteLine(errorMessage);
+                    TableRenderer.RenderProbabilityTable(diceList);
                     continue;
                 }
                 if (int.TryParse(input, out int choice) && choice >= 0 && choice < maxValue)
                 {
                     return choice;
                 }
-                Console.WriteLine($"Invalid input. {errorMessage}");
+                Console.WriteLine($"Invalid input. Enter a number from 0 to {maxValue - 1}, X or ?.\n");
             }
+        }
+
+        private void DisplayMenu(string message, IEnumerable<string> options)
+        {
+            Console.WriteLine(message);
+            foreach (var option in options)
+            {
+                Console.WriteLine(option);
+            }
+            Console.WriteLine("X - exit");
+            Console.WriteLine("? - Probability Table");
+        }
+
+        private string GetUserSelection()
+        {
+            Console.Write("Your selection: ");
+            return Console.ReadLine()?.ToUpper() ?? string.Empty;
         }
 
         private int PerformFairSelection(int range, string description)
