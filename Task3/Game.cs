@@ -13,34 +13,54 @@ namespace Task3
 
         public void Start()
         {
-            Dice computerDice = null;
-            Dice playerDice = null;
-
-            if (IsPlayerFirst())
+            bool playAgain = true;
+            while (playAgain)
             {
-                playerDice = SelectPlayerDice(null);
-                computerDice = SelectComputerDice(playerDice);
+                Dice computerDice = null;
+                Dice playerDice = null;
+
+                if (IsPlayerFirst())
+                {
+                    playerDice = SelectPlayerDice(null);
+                    computerDice = SelectComputerDice(playerDice);
+                }
+                else
+                {
+                    computerDice = SelectComputerDice(null);
+                    playerDice = SelectPlayerDice(computerDice);
+                }
+
+                int computerRollIndex = PerformFairSelection(6, "my roll");
+                int computerRoll = playerDice.GetFace(computerRollIndex);
+
+                int playerRollIndex = PerformFairSelection(6, "your roll");
+                int playerRoll = computerDice.GetFace(playerRollIndex);
+
+                Console.WriteLine($"My roll result is {computerRoll}.");
+                Console.WriteLine($"Your roll result is {playerRoll}.");
+                if (playerRoll > computerRoll)
+                    Console.WriteLine($"You win ({playerRoll} > {computerRoll})!");
+                else if (computerRoll > playerRoll)
+                    Console.WriteLine($"I win ({computerRoll} > {playerRoll})!");
+                else
+                    Console.WriteLine($"It's a tie ({playerRoll} = {computerRoll})!");
+                playAgain = AskPlayAgain();
             }
-            else
+        }
+
+        private bool AskPlayAgain()
+        {
+            while (true)
             {
-                playerDice = SelectPlayerDice(computerDice);
-                computerDice = SelectComputerDice(null);
+                Console.WriteLine("\nDo you want to play again? (Y/N)");
+                Console.Write("Your selection: ");
+                string input = Console.ReadLine()?.ToUpper() ?? string.Empty;
+                if (input == "Y")
+                    return true;
+                if (input == "N" || input == "X")
+                    return false;
+                Console.WriteLine("Invalid input. Please enter 'Y' for yes or 'N' for no.");
             }
-
-            int computerRollIndex = PerformFairSelection(6, "my roll");
-            int computerRoll = playerDice.GetFace(computerRollIndex);
-
-            int playerRollIndex = PerformFairSelection(6, "your roll");
-            int playerRoll = computerDice.GetFace(playerRollIndex);
-
-            Console.WriteLine($"My roll result is {computerRoll}.");
-            Console.WriteLine($"Your roll result is {playerRoll}.");
-            if (playerRoll > computerRoll)
-                Console.WriteLine($"You win ({playerRoll} > {computerRoll})!");
-            else if (computerRoll > playerRoll)
-                Console.WriteLine($"I win ({computerRoll} > {playerRoll})!");
-            else
-                Console.WriteLine($"It's a tie ({playerRoll} = {computerRoll})!");
         }
 
         private int GetUserInput(string message, int maxValue, IEnumerable<string> options)
